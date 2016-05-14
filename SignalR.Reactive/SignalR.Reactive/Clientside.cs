@@ -6,12 +6,12 @@ namespace SignalR.Reactive
     public class Clientside<T>
     {
         private readonly IObservable<T> _observable;
-        
+
         internal Clientside(IObservable<T> observable)
         {
             _observable = observable;
         }
-        
+
         public IDisposable Observable<THub>(string eventName) where THub : Hub, new()
         {
             return Observable<THub>(eventName, null);

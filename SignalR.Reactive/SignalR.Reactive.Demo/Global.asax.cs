@@ -21,9 +21,8 @@ namespace SignalR.Reactive.Demo
             routes.MapRoute(
                 "Default", // Route name
                 "{controller}/{action}/{id}", // URL with parameters
-                new { controller = "Home", action = "Index", id = UrlParameter.Optional } // Parameter defaults
-            );
-
+                new {controller = "Home", action = "Index", id = UrlParameter.Optional} // Parameter defaults
+                );
         }
 
         protected void Application_Start()
@@ -32,7 +31,7 @@ namespace SignalR.Reactive.Demo
 
             RegisterGlobalFilters(GlobalFilters.Filters);
             RegisterRoutes(RouteTable.Routes);
-            
+
             //HOT STUFF
             //We have a serverside IObservable<string> that gets published on the client side
 
@@ -41,6 +40,5 @@ namespace SignalR.Reactive.Demo
             //    .Select(_ => DateTime.Now.ToLongTimeString())
             //    .ToClientside().Observable<RxHub>("SomeValue");
         }
-
     }
 }

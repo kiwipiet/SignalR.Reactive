@@ -6,31 +6,35 @@
 <script type="text/javascript" src="/signalr/hubs"></script>
 <script type="text/javascript">
 
-    $(function () {
+    $(function() {
         var myHub = $.connection.rxHub;
-        myHub.server.observe('SomeValue').subscribe(function (x) {
-            $('#counter').html(x);
-        });
+        myHub.server.observe('SomeValue')
+            .subscribe(function(x) {
+                $('#counter').html(x);
+            });
         $.connection.hub.start();
 
         var guid = new Date().getTime().toString();
 
-        $('#button').click(function () {
-            $('#button').attr('disabled', true);
-            myHub.server.observe(guid)
-                .subscribe(function (log) {
-                    $('#operationLog').append(log);
-                    $('#operationLog').append('<br>');
-                }, function () {
-                    $('#operationLog').append('fatal error');
-                    $('#operationLog').append('<br>');
-                }, function () {
-                    $('#operationLog').append('we are done!');
-                    $('#operationLog').append('<br>');
-                    $('#button').attr('disabled', false);
-                });
-            $.get('/Home/DoALongRunningOperation/' + guid);
-        });
+        $('#button')
+            .click(function() {
+                $('#button').attr('disabled', true);
+                myHub.server.observe(guid)
+                    .subscribe(function(log) {
+                            $('#operationLog').append(log);
+                            $('#operationLog').append('<br>');
+                        },
+                        function() {
+                            $('#operationLog').append('fatal error');
+                            $('#operationLog').append('<br>');
+                        },
+                        function() {
+                            $('#operationLog').append('we are done!');
+                            $('#operationLog').append('<br>');
+                            $('#button').attr('disabled', false);
+                        });
+                $.get('/Home/DoALongRunningOperation/' + guid);
+            });
 
     });
 </script>

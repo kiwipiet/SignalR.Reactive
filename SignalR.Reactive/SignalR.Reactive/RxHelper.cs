@@ -65,23 +65,23 @@ namespace SignalR.Reactive
 
         public static void RaiseOnNext<T>(string eventName, dynamic clients, T payload)
         {
-            clients.subjectOnNext(new { Data = payload, EventName = eventName, Type = ClientsideConstants.OnNextType });
+            clients.subjectOnNext(new {Data = payload, EventName = eventName, Type = ClientsideConstants.OnNextType});
         }
 
         public static void RaiseOnError(string eventName, dynamic clients, Exception payload)
         {
-            clients.subjectOnNext(new { Data = payload, EventName = eventName, Type = ClientsideConstants.OnErrorType });
+            clients.subjectOnNext(new {Data = payload, EventName = eventName, Type = ClientsideConstants.OnErrorType});
         }
 
         public static void RaiseOnCompleted(string eventName, dynamic clients)
         {
-            clients.subjectOnNext(new { EventName = eventName, Type = ClientsideConstants.OnCompletedType });
+            clients.subjectOnNext(new {EventName = eventName, Type = ClientsideConstants.OnCompletedType});
         }
 
         public static RxHubRaiser<T> RaiseOn<T>() where T : Hub, new()
         {
             return new RxHubRaiser<T>();
-        } 
+        }
     }
 
     public class RxHubRaiser<THub> where THub : Hub, new()
@@ -111,7 +111,7 @@ namespace SignalR.Reactive
             RxHelper.WithClient<THub>(clientName, clients => RxHelper.RaiseOnError(eventName, clients, exception));
         }
 
-        public void OnErrorOnGroup(string eventName,Exception exception, string groupName)
+        public void OnErrorOnGroup(string eventName, Exception exception, string groupName)
         {
             RxHelper.WithGroup<THub>(groupName, clients => RxHelper.RaiseOnError(eventName, clients, exception));
         }

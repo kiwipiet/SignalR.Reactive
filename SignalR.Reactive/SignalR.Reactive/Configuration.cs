@@ -2,8 +2,10 @@
 using System.Web;
 using System.Web.Routing;
 using Microsoft.AspNet.SignalR;
+using SignalR.Reactive;
 
-[assembly: PreApplicationStartMethod(typeof(SignalR.Reactive.Configuration), "EnableRxSupport")]
+[assembly: PreApplicationStartMethod(typeof(Configuration), "EnableRxSupport")]
+
 namespace SignalR.Reactive
 {
     public static class Configuration
@@ -11,18 +13,19 @@ namespace SignalR.Reactive
         public static void EnableRxSupport()
         {
             DependencyResolverContext.Instance = GlobalHost.DependencyResolver;
-            
+
             if (DependencyResolverContext.Instance == null)
-                throw new InvalidOperationException("DependenyResolver must be set to an instance of IDependencyResolver");
+                throw new InvalidOperationException(
+                    "DependenyResolver must be set to an instance of IDependencyResolver");
 
             DependencyResolverContext.Instance.EnableRxSupport();
             //ToDo 
             var config = new HubConfiguration
-                {
-                    EnableDetailedErrors = true
-                }; 
+            {
+                EnableDetailedErrors = true
+            };
 
-            RouteTable.Routes.MapHubs(config); 
+            RouteTable.Routes.MapHubs(config);
             //AspNetBootstrapper.Initialize();
         }
     }

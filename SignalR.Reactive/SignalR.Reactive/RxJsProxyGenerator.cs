@@ -14,20 +14,24 @@ namespace SignalR.Reactive
 {
     public class RxJsProxyGenerator : IJavaScriptProxyGenerator
     {
-         private static readonly Lazy<string> _templateFromResource = new Lazy<string>(GetTemplateFromResource);
-
-        private static readonly Type[] _numberTypes = { typeof(byte), typeof(short), typeof(int), typeof(long), typeof(float), typeof(decimal), typeof(double) };
-        private static readonly Type[] _dateTypes = { typeof(DateTime), typeof(DateTimeOffset) };
-
         private const string ScriptResource = "Microsoft.AspNet.SignalR.Scripts.hubs.js";
+        private static readonly Lazy<string> _templateFromResource = new Lazy<string>(GetTemplateFromResource);
+
+        private static readonly Type[] _numberTypes =
+        {
+            typeof(byte), typeof(short), typeof(int), typeof(long),
+            typeof(float), typeof(decimal), typeof(double)
+        };
+
+        private static readonly Type[] _dateTypes = {typeof(DateTime), typeof(DateTimeOffset)};
+        private readonly Lazy<string> _generatedTemplate;
+        private readonly IJavaScriptMinifier _javaScriptMinifier;
 
         private readonly IHubManager _manager;
-        private readonly IJavaScriptMinifier _javaScriptMinifier;
-        private readonly Lazy<string> _generatedTemplate;
 
         public RxJsProxyGenerator(IDependencyResolver resolver) :
             this(resolver.Resolve<IHubManager>(),
-                 resolver.Resolve<IJavaScriptMinifier>())
+                resolver.Resolve<IJavaScriptMinifier>())
         {
         }
 
@@ -35,7 +39,7 @@ namespace SignalR.Reactive
         {
             _manager = manager;
             _javaScriptMinifier = javaScriptMinifier ?? NullJavaScriptMinifier.Instance;
-            _generatedTemplate = new Lazy<string>(() => GenerateProxy(_manager, _javaScriptMinifier, includeDocComments: false));
+            _generatedTemplate = new Lazy<string>(() => GenerateProxy(_manager, _javaScriptMinifier, false));
         }
 
         public string GenerateProxy(string serviceUrl)
@@ -56,7 +60,8 @@ namespace SignalR.Reactive
             return generateProxy.Replace("{serviceUrl}", serviceUrl);
         }
 
-        private static string GenerateProxy(IHubManager hubManager, IJavaScriptMinifier javaScriptMinifier, bool includeDocComments)
+        private static string GenerateProxy(IHubManager hubManager, IJavaScriptMinifier javaScriptMinifier,
+            bool includeDocComments)
         {
             var script = _templateFromResource.Value;
 
@@ -86,7 +91,8 @@ namespace SignalR.Reactive
             return script;
         }
 
-        private static void GenerateType(IHubManager hubManager, StringBuilder sb, Descriptor descriptor, bool includeDocComments)
+        private static void GenerateType(IHubManager hubManager, StringBuilder sb, Descriptor descriptor,
+            bool includeDocComments)
         {
             // Get only actions with minimum number of parameters.
             var methods = GetMethods(hubManager, descriptor);
@@ -112,7 +118,7 @@ namespace SignalR.Reactive
                 first = false;
             }
             GenerateServerRxSubject(sb, descriptor);
-            
+
 
             sb.AppendLine();
             sb.Append("        }");
@@ -139,29 +145,41 @@ namespace SignalR.Reactive
         private static IEnumerable<MethodDescriptor> GetMethods(IHubManager manager, Descriptor descriptor)
         {
             return from method in manager.GetHubMethods(descriptor.Name)
-                   group method by method.Name into overloads
-                   let oload = (from overload in overloads
-                                orderby overload.Parameters.Count
-                                select overload).FirstOrDefault()
-                   orderby oload.Name
-                   select oload;
+                group method by method.Name
+                into overloads
+                let oload = (from overload in overloads
+                    orderby overload.Parameters.Count
+                    select overload).FirstOrDefault()
+                orderby oload.Name
+                select oload;
         }
 
-        private static void GenerateMethod(StringBuilder sb, MethodDescriptor method, bool includeDocComments, string hubName)
+        private static void GenerateMethod(StringBuilder sb, MethodDescriptor method, bool includeDocComments,
+            string hubName)
         {
             var parameterNames = method.Parameters.Select(p => p.Name).ToList();
             sb.AppendLine();
-            sb.AppendFormat("            {0}: function ({1}) {{", GetDescriptorName(method), Commas(parameterNames)).AppendLine();
+            sb.AppendFormat("            {0}: function ({1}) {{", GetDescriptorName(method), Commas(parameterNames))
+                .AppendLine();
             if (includeDocComments)
             {
-                sb.AppendFormat("<summary>Calls the {0} method on the server-side {1} hub.&#10;Returns a jQuery.Deferred() promise.</summary>", method.Name, method.Hub.Name).AppendLine();
-                var parameterDoc = method.Parameters.Select(p => string.Format(CultureInfo.CurrentCulture, " /// <param name=\"{0}\" type=\"{1}\">Server side type is {2}</param>", p.Name, MapToJavaScriptType(p.ParameterType), p.ParameterType)).ToList();
+                sb.AppendFormat(
+                    "<summary>Calls the {0} method on the server-side {1} hub.&#10;Returns a jQuery.Deferred() promise.</summary>",
+                    method.Name, method.Hub.Name).AppendLine();
+                var parameterDoc =
+                    method.Parameters.Select(
+                        p =>
+                            string.Format(CultureInfo.CurrentCulture,
+                                " /// <param name=\"{0}\" type=\"{1}\">Server side type is {2}</param>", p.Name,
+                                MapToJavaScriptType(p.ParameterType), p.ParameterType)).ToList();
                 if (parameterDoc.Any())
                 {
                     sb.AppendLine(string.Join(Environment.NewLine, parameterDoc));
                 }
             }
-            sb.AppendFormat("                return proxies.{0}.invoke.apply(proxies.{0}, $.merge([\"{1}\"], $.makeArray(arguments)));", hubName, method.Name).AppendLine();
+            sb.AppendFormat(
+                "                return proxies.{0}.invoke.apply(proxies.{0}, $.merge([\"{1}\"], $.makeArray(arguments)));",
+                hubName, method.Name).AppendLine();
             sb.Append("             }");
         }
 
@@ -170,14 +188,27 @@ namespace SignalR.Reactive
             var hubName = JsonUtility.CamelCase(descriptor.Name);
             sb.AppendFormat(",").AppendLine();
             sb.AppendFormat("            observe: function (eventName) {{ ").AppendLine();
-            sb.AppendFormat("                                return Rx.Observable.createWithDisposable(function (obs) {{ ").AppendLine();
-            sb.AppendFormat("                                                var disposable = signalR.{0}.client.subject ", hubName).AppendLine();
+            sb.AppendFormat(
+                "                                return Rx.Observable.createWithDisposable(function (obs) {{ ")
+                .AppendLine();
+            sb.AppendFormat(
+                "                                                var disposable = signalR.{0}.client.subject ", hubName)
+                .AppendLine();
             sb.AppendFormat("                                                    .asObservable() ").AppendLine();
-            sb.AppendFormat("                                                    .where(function (x) {{ return x.EventName.toLowerCase() === eventName.toLowerCase(); }}) ").AppendLine();
-            sb.AppendFormat("                                                    .subscribe(function (x) {{ ").AppendLine();
-            sb.AppendFormat("                                                        if (x.Type === 'onNext') obs.onNext(x.Data); ").AppendLine();
-            sb.AppendFormat("                                                        if (x.Type === 'onError') obs.onError(x.Data); ").AppendLine();
-            sb.AppendFormat("                                                        if (x.Type === 'onCompleted') obs.onCompleted(); ").AppendLine();
+            sb.AppendFormat(
+                "                                                    .where(function (x) {{ return x.EventName.toLowerCase() === eventName.toLowerCase(); }}) ")
+                .AppendLine();
+            sb.AppendFormat("                                                    .subscribe(function (x) {{ ")
+                .AppendLine();
+            sb.AppendFormat(
+                "                                                        if (x.Type === 'onNext') obs.onNext(x.Data); ")
+                .AppendLine();
+            sb.AppendFormat(
+                "                                                        if (x.Type === 'onError') obs.onError(x.Data); ")
+                .AppendLine();
+            sb.AppendFormat(
+                "                                                        if (x.Type === 'onCompleted') obs.onCompleted(); ")
+                .AppendLine();
             sb.AppendFormat("                                                    }}); ").AppendLine();
             sb.AppendFormat("                                                return disposable; ").AppendLine();
             sb.AppendFormat("                                 }}); ").AppendLine();
@@ -188,9 +219,11 @@ namespace SignalR.Reactive
         {
             var hubName = JsonUtility.CamelCase(descriptor.Name);
             sb.AppendFormat("").AppendLine();
-            sb.AppendFormat("            subject : $.extend(new Rx.Subject(), {{toJSON: function() {{}}}}),").AppendLine();
+            sb.AppendFormat("            subject : $.extend(new Rx.Subject(), {{toJSON: function() {{}}}}),")
+                .AppendLine();
             sb.AppendFormat("            subjectOnNext: function(value) {{").AppendLine();
-            sb.AppendFormat("                                           signalR.{0}.client.subject.onNext(value);", hubName).AppendLine();
+            sb.AppendFormat("                                           signalR.{0}.client.subject.onNext(value);",
+                hubName).AppendLine();
             sb.AppendFormat("                       }}").AppendLine();
         }
 
@@ -232,7 +265,9 @@ namespace SignalR.Reactive
 
         private static string GetTemplateFromResource()
         {
-            using (var resourceStream = typeof(DefaultJavaScriptProxyGenerator).Assembly.GetManifestResourceStream(ScriptResource))
+            using (
+                var resourceStream =
+                    typeof(DefaultJavaScriptProxyGenerator).Assembly.GetManifestResourceStream(ScriptResource))
             {
                 var reader = new StreamReader(resourceStream);
                 return reader.ReadToEnd();

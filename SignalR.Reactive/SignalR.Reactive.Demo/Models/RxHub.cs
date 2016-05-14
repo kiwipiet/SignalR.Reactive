@@ -22,7 +22,7 @@ namespace SignalR.Reactive.Demo.Models
 
         public void SendMessage(string message, string group)
         {
-            this.RaiseOnNextOnGroup("NewMessage",  group, message);
+            this.RaiseOnNextOnGroup("NewMessage", group, message);
         }
     }
 }

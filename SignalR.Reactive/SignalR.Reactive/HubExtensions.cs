@@ -7,7 +7,7 @@ namespace SignalR.Reactive
     {
         public static void RaiseOnNext<T>(this Hub hub, string eventName, T payload)
         {
-            RaiseOnNext(hub,eventName, null, payload);
+            RaiseOnNext(hub, eventName, null, payload);
         }
 
         public static void RaiseOnNext<T>(this Hub hub, string eventName, string clientName, T payload)
@@ -25,12 +25,14 @@ namespace SignalR.Reactive
             RaiseOnNext(hub, eventName, null, payload);
         }
 
-        public static void RaiseOnError<T>(this Hub hub, string eventName, string clientName, T payload) where T : Exception
+        public static void RaiseOnError<T>(this Hub hub, string eventName, string clientName, T payload)
+            where T : Exception
         {
             RxHelper.WithClient(hub, clientName, clients => RxHelper.RaiseOnError(eventName, clients, payload));
         }
 
-        public static void RaiseOnErrorOnGroup<T>(this Hub hub, string eventName, string groupName, T payload) where T : Exception
+        public static void RaiseOnErrorOnGroup<T>(this Hub hub, string eventName, string groupName, T payload)
+            where T : Exception
         {
             RxHelper.WithGroup(hub, groupName, clients => RxHelper.RaiseOnError(eventName, clients, payload));
         }
