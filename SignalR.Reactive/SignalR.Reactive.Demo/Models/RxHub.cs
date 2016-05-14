@@ -1,16 +1,10 @@
-﻿using System;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNet.SignalR;
-
 
 namespace SignalR.Reactive.Demo.Models
 {
-
     public class RxHub : Hub
     {
-
         public Task Join(string group)
         {
             return Groups.Add(Context.ConnectionId, group);
@@ -30,6 +24,5 @@ namespace SignalR.Reactive.Demo.Models
         {
             this.RaiseOnNextOnGroup("NewMessage",  group, message);
         }
-
     }
 }

@@ -3,7 +3,6 @@ using System.Web;
 using System.Web.Routing;
 using Microsoft.AspNet.SignalR;
 
-
 [assembly: PreApplicationStartMethod(typeof(SignalR.Reactive.Configuration), "EnableRxSupport")]
 namespace SignalR.Reactive
 {
@@ -25,7 +24,6 @@ namespace SignalR.Reactive
 
             RouteTable.Routes.MapHubs(config); 
             //AspNetBootstrapper.Initialize();
-
         }
     }
 }

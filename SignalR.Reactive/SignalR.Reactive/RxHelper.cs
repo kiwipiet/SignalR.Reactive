@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Infrastructure;
 
-
 namespace SignalR.Reactive
 {
-
     public static class RxHelper
     {
         public static dynamic GetHubClients<THub>() where THub : Hub, new()
@@ -16,7 +11,6 @@ namespace SignalR.Reactive
             var connectionManager = DependencyResolverContext.Instance.Resolve<IConnectionManager>();
             return connectionManager.GetHubContext<THub>().Clients.All;
         }
-
 
         public static dynamic GetHubClients<THub>(string clientName) where THub : Hub, new()
         {

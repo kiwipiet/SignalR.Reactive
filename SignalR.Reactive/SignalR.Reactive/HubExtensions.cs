@@ -20,8 +20,6 @@ namespace SignalR.Reactive
             RxHelper.WithGroup(hub, groupName, clients => RxHelper.RaiseOnNext(eventName, clients, payload));
         }
 
-
-
         public static void RaiseOnError<T>(this Hub hub, string eventName, T payload)
         {
             RaiseOnNext(hub, eventName, null, payload);
@@ -36,7 +34,6 @@ namespace SignalR.Reactive
         {
             RxHelper.WithGroup(hub, groupName, clients => RxHelper.RaiseOnError(eventName, clients, payload));
         }
-
 
         public static void RaiseCompleted(this Hub hub, string eventName)
         {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -11,15 +10,14 @@ using Microsoft.AspNet.SignalR.Hubs;
 using Microsoft.AspNet.SignalR.Json;
 using Newtonsoft.Json;
 
-
 namespace SignalR.Reactive
 {
     public class RxJsProxyGenerator : IJavaScriptProxyGenerator
     {
          private static readonly Lazy<string> _templateFromResource = new Lazy<string>(GetTemplateFromResource);
 
-        private static readonly Type[] _numberTypes = new[] { typeof(byte), typeof(short), typeof(int), typeof(long), typeof(float), typeof(decimal), typeof(double) };
-        private static readonly Type[] _dateTypes = new[] { typeof(DateTime), typeof(DateTimeOffset) };
+        private static readonly Type[] _numberTypes = { typeof(byte), typeof(short), typeof(int), typeof(long), typeof(float), typeof(decimal), typeof(double) };
+        private static readonly Type[] _dateTypes = { typeof(DateTime), typeof(DateTimeOffset) };
 
         private const string ScriptResource = "Microsoft.AspNet.SignalR.Scripts.hubs.js";
 
@@ -53,14 +51,14 @@ namespace SignalR.Reactive
         {
             serviceUrl = JavaScriptEncode(serviceUrl);
 
-            string generateProxy = GenerateProxy(_manager, _javaScriptMinifier, includeDocComments);
+            var generateProxy = GenerateProxy(_manager, _javaScriptMinifier, includeDocComments);
 
             return generateProxy.Replace("{serviceUrl}", serviceUrl);
         }
 
         private static string GenerateProxy(IHubManager hubManager, IJavaScriptMinifier javaScriptMinifier, bool includeDocComments)
         {
-            string script = _templateFromResource.Value;
+            var script = _templateFromResource.Value;
 
             var hubs = new StringBuilder();
             var first = true;
@@ -88,7 +86,7 @@ namespace SignalR.Reactive
             return script;
         }
 
-        private static void GenerateType(IHubManager hubManager, StringBuilder sb, HubDescriptor descriptor, bool includeDocComments)
+        private static void GenerateType(IHubManager hubManager, StringBuilder sb, Descriptor descriptor, bool includeDocComments)
         {
             // Get only actions with minimum number of parameters.
             var methods = GetMethods(hubManager, descriptor);
@@ -102,7 +100,7 @@ namespace SignalR.Reactive
             sb.AppendLine();
             sb.AppendFormat("        proxies.{0}.server = {{", hubName);
 
-            bool first = true;
+            var first = true;
 
             foreach (var method in methods)
             {
@@ -124,10 +122,10 @@ namespace SignalR.Reactive
         {
             if (descriptor == null)
             {
-                throw new ArgumentNullException("descriptor");
+                throw new ArgumentNullException(nameof(descriptor));
             }
 
-            string name = descriptor.Name;
+            var name = descriptor.Name;
 
             // If the name was not specified then do not camel case
             if (!descriptor.NameSpecified)
@@ -138,7 +136,7 @@ namespace SignalR.Reactive
             return name;
         }
 
-        private static IEnumerable<MethodDescriptor> GetMethods(IHubManager manager, HubDescriptor descriptor)
+        private static IEnumerable<MethodDescriptor> GetMethods(IHubManager manager, Descriptor descriptor)
         {
             return from method in manager.GetHubMethods(descriptor.Name)
                    group method by method.Name into overloads
@@ -157,17 +155,17 @@ namespace SignalR.Reactive
             if (includeDocComments)
             {
                 sb.AppendFormat("<summary>Calls the {0} method on the server-side {1} hub.&#10;Returns a jQuery.Deferred() promise.</summary>", method.Name, method.Hub.Name).AppendLine();
-                var parameterDoc = method.Parameters.Select(p => String.Format(CultureInfo.CurrentCulture, " /// <param name=\"{0}\" type=\"{1}\">Server side type is {2}</param>", p.Name, MapToJavaScriptType(p.ParameterType), p.ParameterType)).ToList();
+                var parameterDoc = method.Parameters.Select(p => string.Format(CultureInfo.CurrentCulture, " /// <param name=\"{0}\" type=\"{1}\">Server side type is {2}</param>", p.Name, MapToJavaScriptType(p.ParameterType), p.ParameterType)).ToList();
                 if (parameterDoc.Any())
                 {
-                    sb.AppendLine(String.Join(Environment.NewLine, parameterDoc));
+                    sb.AppendLine(string.Join(Environment.NewLine, parameterDoc));
                 }
             }
             sb.AppendFormat("                return proxies.{0}.invoke.apply(proxies.{0}, $.merge([\"{1}\"], $.makeArray(arguments)));", hubName, method.Name).AppendLine();
             sb.Append("             }");
         }
 
-        private static void GenerateServerRxSubject(StringBuilder sb, HubDescriptor descriptor)
+        private static void GenerateServerRxSubject(StringBuilder sb, Descriptor descriptor)
         {
             var hubName = JsonUtility.CamelCase(descriptor.Name);
             sb.AppendFormat(",").AppendLine();
@@ -186,7 +184,7 @@ namespace SignalR.Reactive
             sb.AppendFormat("                             }} ").AppendLine();
         }
 
-        private static void GenerateClientRxStuff(StringBuilder sb, HubDescriptor descriptor)
+        private static void GenerateClientRxStuff(StringBuilder sb, Descriptor descriptor)
         {
             var hubName = JsonUtility.CamelCase(descriptor.Name);
             sb.AppendFormat("").AppendLine();
@@ -219,7 +217,7 @@ namespace SignalR.Reactive
             {
                 return "Date";
             }
-            return String.Empty;
+            return string.Empty;
         }
 
         private static string Commas(IEnumerable<string> values)
@@ -229,12 +227,12 @@ namespace SignalR.Reactive
 
         private static string Commas<T>(IEnumerable<T> values, Func<T, string> selector)
         {
-            return String.Join(", ", values.Select(selector));
+            return string.Join(", ", values.Select(selector));
         }
 
         private static string GetTemplateFromResource()
         {
-            using (Stream resourceStream = typeof(DefaultJavaScriptProxyGenerator).Assembly.GetManifestResourceStream(ScriptResource))
+            using (var resourceStream = typeof(DefaultJavaScriptProxyGenerator).Assembly.GetManifestResourceStream(ScriptResource))
             {
                 var reader = new StreamReader(resourceStream);
                 return reader.ReadToEnd();
